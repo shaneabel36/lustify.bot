@@ -75,7 +75,7 @@ function setupEventListeners() {
  */
 async function loadCharacters() {
     try {
-        const response = await fetch('/api/characters');
+        const response = await fetch('/characters');
         const data = await response.json();
         
         if (data.characters && data.characters.length > 0) {
@@ -114,7 +114,7 @@ async function sendMessage() {
     showLoading();
     
     try {
-        const response = await fetch('/api/chat', {
+        const response = await fetch('/chat', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -155,7 +155,7 @@ async function generateImage() {
     showLoading();
     
     try {
-        const response = await fetch('/api/generate-image', {
+        const response = await fetch('/generate-image', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -194,7 +194,7 @@ async function generateImage() {
  */
 async function getNewSeed() {
     try {
-        const response = await fetch('/api/new-seed', {
+        const response = await fetch('/new-seed', {
             method: 'POST'
         });
         
@@ -219,7 +219,7 @@ async function clearChat() {
     }
     
     try {
-        await fetch('/api/clear', {
+        await fetch('/clear', {
             method: 'POST'
         });
         
