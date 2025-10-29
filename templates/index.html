@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lustify Bot - NSFW Roleplay Chat</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🔥 Lustify Bot</h1>
+            <p class="subtitle">NSFW Roleplay Chat with AI Image Generation</p>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-section">
+                    <h3>Character Selection</h3>
+                    <select id="character-select" class="character-select">
+                        <option value="">Loading characters...</option>
+                    </select>
+                    <p class="help-text">Choose a character for roleplay</p>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3>Image Generation</h3>
+                    <input type="text" id="image-prompt" class="image-prompt" placeholder="Describe the image you want...">
+                    <button id="generate-image-btn" class="btn btn-primary">Generate Image</button>
+                    <button id="new-seed-btn" class="btn btn-secondary">New Variation</button>
+                    <p class="help-text">Current seed: <span id="current-seed">Not set</span></p>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3>Actions</h3>
+                    <button id="clear-chat-btn" class="btn btn-danger">Clear Chat</button>
+                </div>
+            </aside>
+
+            <!-- Chat Area -->
+            <main class="chat-container">
+                <div id="chat-messages" class="chat-messages">
+                    <div class="welcome-message">
+                        <h2>Welcome to Lustify Bot! 👋</h2>
+                        <p>I'm your AI companion for NSFW roleplay and foot fetish conversations.</p>
+                        <p><strong>How to use:</strong></p>
+                        <ul>
+                            <li>Select a character from the sidebar (optional)</li>
+                            <li>Type your message in the chat box below</li>
+                            <li>Request images by typing what you want to see</li>
+                            <li>Use the "Generate Image" button for custom images</li>
+                        </ul>
+                        <p class="warning">⚠️ This bot is for adult content only. Please use responsibly.</p>
+                    </div>
+                </div>
+
+                <!-- Chat Input -->
+                <div class="chat-input-container">
+                    <textarea id="chat-input" class="chat-input" placeholder="Type your message here... (Press Enter to send, Shift+Enter for new line)" rows="3"></textarea>
+                    <button id="send-btn" class="btn btn-send">Send</button>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner"></div>
+        <p>Processing...</p>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
