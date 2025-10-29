@@ -72,7 +72,7 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/api/characters', methods=['GET'])
+@app.route('/characters', methods=['GET'])
 def get_characters():
     """
     API endpoint to fetch available characters
@@ -87,7 +87,7 @@ def get_characters():
     return jsonify({"characters": characters})
 
 
-@app.route('/api/chat', methods=['POST'])
+@app.route('/chat', methods=['POST'])
 def chat():
     """
     API endpoint for sending chat messages
@@ -139,7 +139,7 @@ def chat():
     })
 
 
-@app.route('/api/generate-image', methods=['POST'])
+@app.route('/generate-image', methods=['POST'])
 def generate_image():
     """
     API endpoint for generating images
@@ -197,7 +197,7 @@ def generate_image():
         return jsonify({"error": "Failed to generate image"}), 500
 
 
-@app.route('/api/new-seed', methods=['POST'])
+@app.route('/new-seed', methods=['POST'])
 def new_seed():
     """
     API endpoint to generate a new seed for different image variations
@@ -214,7 +214,7 @@ def new_seed():
     return jsonify({"seed": new_seed_value})
 
 
-@app.route('/api/clear', methods=['POST'])
+@app.route('/clear', methods=['POST'])
 def clear_conversation():
     """
     API endpoint to clear conversation history
