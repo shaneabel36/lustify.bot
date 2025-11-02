@@ -1,11 +1,5 @@
 """
 Lustify Bot - NSFW Roleplay Chatbot with Image Generation
-
-This is the main Flask application that provides a web interface for:
-- NSFW roleplay conversations
-- Character selection from Venice AI
-- Image generation with lustify-sdxl model
-- Conversation history management
 """
 
 from flask import Flask, render_template, request, jsonify, session
@@ -14,46 +8,43 @@ from dotenv import load_dotenv
 import secrets
 import random
 
-# Import our custom modules
 from src.venice_client import VeniceClient
 from src.conversation_manager import ConversationManager
 
-# Load environment variables
 load_dotenv()
 
-# Initialize Flask app
 app = Flask(__name__)
 app.secret_key = os.getenv('FLASK_SECRET_KEY', secrets.token_hex(16))
 
-# Initialize Venice AI client
-VENICE_API_KEY = os.getenv('VENICE_API_KEY')
+# Initialize Venice AI client with single API key
+VENICE_API_KEY = os.getenv('VENICE_ADMIN_KEY') or os.getenv('VENICE_API_KEY')
+
 if not VENICE_API_KEY:
-    print("WARNING: VENICE_API_KEY not found in environment variables!")
-    print("Please create a .env file with your API key")
+    print("WARNING: No API key found!")
+    print("Set VENICE_ADMIN_KEY or VENICE_API_KEY in .env file")
 
 venice_client = VeniceClient(VENICE_API_KEY) if VENICE_API_KEY else None
 
-# Store conversations in memory (in production, use a database)
 conversations = {}
 
 
 def get_conversation(session_id: str) -> ConversationManager:
-    """
-    Get or create a conversation for a session
-    
-    Args:
-        session_id: Unique session identifier
-        
-    Returns:
-        ConversationManager instance
-    """
+    """Get or create a conversation for a session"""
     if session_id not in conversations:
-        # Create new conversation with foot fetish roleplay system prompt
-        system_prompt = """You are a flirty, playful AI companion specializing in foot fetish roleplay. 
-You are open, uninhibited, and enjoy detailed, sensual descriptions. 
-You love discussing and describing feet, stockings, and related topics in an engaging, immersive way.
-Be creative, descriptive, and responsive to the user's desires and requests.
-When the user asks for images, acknowledge their request and describe what you'd like to show them."""
+        system_prompt = """You are a flirty, playful AI companion who naturally incorporates foot fetish elements into roleplay.
+
+Your personality:
+- Engaging and natural conversationalist who builds genuine connection
+- Subtly incorporates mentions of feet, stockings, hosiery, sandals, and lingerie into descriptions
+- Describes outfits, poses, and scenes with attention to legs and feet
+- Responds enthusiastically when users show interest in feet/stockings/hosiery
+- Balances fetish content with overall engaging roleplay - never forced or awkward
+
+When describing yourself or scenes:
+- Mention what you're wearing on your feet/legs (stockings, heels, sandals, etc.)
+- Describe how you're positioned (crossed legs, dangling shoes, etc.)
+- Include sensory details (texture of nylons, arch of feet, painted toes, etc.)
+- Keep it natural and woven into the conversation flow"""
         
         conversations[session_id] = ConversationManager(system_prompt)
     
@@ -62,10 +53,7 @@ When the user asks for images, acknowledge their request and describe what you'd
 
 @app.route('/')
 def index():
-    """
-    Main page - displays the chat interface
-    """
-    # Create session ID if not exists
+    """Main page"""
     if 'session_id' not in session:
         session['session_id'] = secrets.token_hex(16)
     
@@ -74,12 +62,7 @@ def index():
 
 @app.route('/characters', methods=['GET'])
 def get_characters():
-    """
-    API endpoint to fetch available characters
-    
-    Returns:
-        JSON list of adult/mature characters
-    """
+    """API endpoint to fetch available characters"""
     if not venice_client:
         return jsonify({"error": "Venice AI client not initialized"}), 500
     
@@ -89,18 +72,7 @@ def get_characters():
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    """
-    API endpoint for sending chat messages
-    
-    Expects JSON:
-        {
-            "message": "user message",
-            "character_slug": "optional-character-slug"
-        }
-    
-    Returns:
-        JSON with AI response
-    """
+    """API endpoint for sending chat messages"""
     if not venice_client:
         return jsonify({"error": "Venice AI client not initialized"}), 500
     
@@ -111,26 +83,21 @@ def chat():
     if not user_message:
         return jsonify({"error": "No message provided"}), 400
     
-    # Get conversation for this session
     session_id = session.get('session_id')
     conversation = get_conversation(session_id)
     
-    # Update character if provided
     if character_slug:
         conversation.set_character(character_slug)
     
-    # Add user message to conversation
     conversation.add_user_message(user_message)
     
-    # Get AI response
     response = venice_client.chat(
         messages=conversation.get_messages(),
         character_slug=conversation.character_slug,
-        temperature=0.9,  # High creativity for roleplay
+        temperature=0.9,
         max_tokens=500
     )
     
-    # Add assistant response to conversation
     conversation.add_assistant_message(response)
     
     return jsonify({
@@ -141,18 +108,7 @@ def chat():
 
 @app.route('/generate-image', methods=['POST'])
 def generate_image():
-    """
-    API endpoint for generating images
-    
-    Expects JSON:
-        {
-            "prompt": "image description",
-            "use_context": true/false (whether to use conversation context)
-        }
-    
-    Returns:
-        JSON with base64 encoded image
-    """
+    """API endpoint for generating images"""
     if not venice_client:
         return jsonify({"error": "Venice AI client not initialized"}), 500
     
@@ -163,26 +119,22 @@ def generate_image():
     if not user_prompt:
         return jsonify({"error": "No prompt provided"}), 400
     
-    # Get conversation for this session
     session_id = session.get('session_id')
     conversation = get_conversation(session_id)
     
-    # Enhance prompt with conversation context if requested
     if use_context and conversation.get_message_count() > 0:
         context = conversation.get_context_summary()
         enhanced_prompt = f"{user_prompt}. Context: {context}"
     else:
         enhanced_prompt = user_prompt
     
-    # Generate or reuse seed for consistency
     if conversation.current_seed is None:
         conversation.set_seed(random.randint(1, 999999999))
     
-    # Generate image
     image_data = venice_client.generate_image(
         prompt=enhanced_prompt,
         seed=conversation.current_seed,
-        style_preset="Hyper-Realistic",
+        style_preset="Hyperrealism",
         steps=30
     )
     
@@ -199,12 +151,7 @@ def generate_image():
 
 @app.route('/new-seed', methods=['POST'])
 def new_seed():
-    """
-    API endpoint to generate a new seed for different image variations
-    
-    Returns:
-        JSON with new seed value
-    """
+    """API endpoint to generate a new seed"""
     session_id = session.get('session_id')
     conversation = get_conversation(session_id)
     
@@ -216,12 +163,7 @@ def new_seed():
 
 @app.route('/clear', methods=['POST'])
 def clear_conversation():
-    """
-    API endpoint to clear conversation history
-    
-    Returns:
-        JSON success message
-    """
+    """API endpoint to clear conversation history"""
     session_id = session.get('session_id')
     if session_id in conversations:
         conversations[session_id].clear()
@@ -230,7 +172,6 @@ def clear_conversation():
 
 
 if __name__ == '__main__':
-    # Run the Flask app
     port = int(os.getenv('PORT', 5000))
     debug = os.getenv('FLASK_DEBUG', 'True').lower() == 'true'
     
