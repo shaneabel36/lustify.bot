@@ -115,6 +115,7 @@ def generate_image():
     data = request.json
     user_prompt = data.get('prompt', '')
     use_context = data.get('use_context', True)
+       
     
     if not user_prompt:
         return jsonify({"error": "No prompt provided"}), 400
