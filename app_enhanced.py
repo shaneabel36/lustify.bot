@@ -1,5 +1,5 @@
 """
-Lustify Bot - NSFW Roleplay Chatbot with Image Generation
+Lustify Bot - NSFW Roleplay Chatbot with Enhanced Image Generation
 """
 
 from flask import Flask, render_template, request, jsonify, session
@@ -8,8 +8,8 @@ from dotenv import load_dotenv
 import secrets
 import random
 
+from src.enhanced_conversation_manager import ConversationManager
 from src.venice_client import VeniceClient
-from src.conversation_manager import ConversationManager
 
 load_dotenv()
 
@@ -56,7 +56,7 @@ def index():
     """Main page"""
     if 'session_id' not in session:
         session['session_id'] = secrets.token_hex(16)
-    
+
     return render_template('index.html')
 
 
@@ -108,14 +108,16 @@ def chat():
 
 @app.route('/generate-image', methods=['POST'])
 def generate_image():
-    """API endpoint for generating images"""
+    """API endpoint for generating images with enhanced context analysis"""
     if not venice_client:
         return jsonify({"error": "Venice AI client not initialized"}), 500
     
     data = request.json
     user_prompt = data.get('prompt', '')
     use_context = data.get('use_context', True)
-       
+    user_message = data.get('user_message', '')
+    ai_response = data.get('ai_response', '')
+    smart_analysis = data.get('smart_analysis', False)
     
     if not user_prompt:
         return jsonify({"error": "No prompt provided"}), 400
@@ -123,11 +125,25 @@ def generate_image():
     session_id = session.get('session_id')
     conversation = get_conversation(session_id)
     
-    if use_context and conversation.get_message_count() > 0:
+    # Enhanced context analysis
+    if smart_analysis and user_message and ai_response:
+        analysis = conversation.analyze_image_request(user_message, ai_response)
+        enhanced_prompt = analysis.get('dynamic_prompt', user_prompt)
+        analysis_info = {
+            "request_type": analysis["request_type"],
+            "mood": analysis["mood"],
+            "focal_point": analysis["focal_point"],
+            "setting": analysis["setting"],
+            "detected_elements": analysis["specific_elements"],
+            "context_keywords": analysis["context_keywords"]
+        }
+    elif use_context and conversation.get_message_count() > 0:
         context = conversation.get_context_summary()
         enhanced_prompt = f"{user_prompt}. Context: {context}"
+        analysis_info = {"context_used": True}
     else:
         enhanced_prompt = user_prompt
+        analysis_info = {"context_used": False}
     
     if conversation.current_seed is None:
         conversation.set_seed(random.randint(1, 999999999))
@@ -144,7 +160,8 @@ def generate_image():
         return jsonify({
             "image": image_data,
             "seed": conversation.current_seed,
-            "prompt": enhanced_prompt
+            "prompt": enhanced_prompt,
+            "analysis": analysis_info
         })
     else:
         return jsonify({"error": "Failed to generate image"}), 500
@@ -177,10 +194,11 @@ if __name__ == '__main__':
     debug = os.getenv('FLASK_DEBUG', 'True').lower() == 'true'
     
     print(f"\n{'='*60}")
-    print(f"🔥 Lustify Bot Starting...")
+    print(f"🔥 Lustify Bot Starting with Enhanced Context Analysis...")
     print(f"{'='*60}")
-    print(f"📍 Server: http://localhost:{port}")
+    print(f"🌐 Server: http://localhost:{port}")
     print(f"🔑 API Key: {'✓ Configured' if VENICE_API_KEY else '✗ Missing'}")
+    print(f"🧠 Smart Analysis: ENABLED")
     print(f"{'='*60}\n")
     
     app.run(host='0.0.0.0', port=port, debug=debug)
